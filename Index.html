@@ -1,0 +1,373 @@
+@@ -1,88 +1,298 @@
+import { useState, useRef, useEffect } from "react";
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>জাদুর প্রদীপের দৈত্য</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1a18;
+      color: #f5f0e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #app {
+      width: 100%;
+      max-width: 480px;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+    }
+    #landing {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 420px;
+      gap: 1.5rem;
+      text-align: center;
+    }
+    #chat-area {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      flex: 1;
+    }
+    .msg-wrap {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      align-items: flex-start;
+    }
+    .msg-wrap.user { flex-direction: row-reverse; }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .avatar.genie { background: #2C2C2A; color: #FAC775; }
+    .avatar.user {
+      background: #2a2a28;
+      border: 0.5px solid #444;
+      color: #aaa;
+      font-size: 12px;
+    }
+    .bubble {
+      max-width: 78%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .bubble.genie {
+      background: #2C2C2A;
+      color: #FAC775;
+      border-radius: 4px 14px 14px 14px;
+    }
+    .bubble.user {
+      background: #2a2a28;
+      color: #f0ebe0;
+      border: 0.5px solid #444;
+      border-radius: 14px 4px 14px 14px;
+    }
+    #msgs {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 360px;
+      padding: 4px 0;
+    }
+    #input-row {
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 0.5px solid #333;
+      margin-top: 8px;
+    }
+    #input-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 0.5px solid #444;
+      background: #2a2a28;
+      color: #f0ebe0;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    #input-row button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      background: #2C2C2A;
+      color: #FAC775;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    #input-row button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .lamp-icon { font-size: 52px; line-height: 1; }
+    .title { font-size: 22px; font-weight: 500; color: #FAC775; }
+    .subtitle { font-size: 15px; color: #aaa; line-height: 1.6; max-width: 360px; }
+    #start-btn {
+      padding: 12px 28px;
+      background: #2C2C2A;
+      color: #FAC775;
+      border: 0.5px solid #FAC775;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    #start-btn:hover { background: #3a3a38; }
+    #api-row { display: flex; gap: 8px; padding: 8px 0 0; width: 100%; max-width: 380px; }
+    #api-key {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 0.5px solid #444;
+      background: #2a2a28;
+      color: #f0ebe0;
+      font-size: 13px;
+      font-family: monospace;
+    }
+    .key-label { font-size: 12px; color: #888; padding-bottom: 4px; }
+    .typing { display: flex; gap: 5px; align-items: center; padding: 10px 14px; }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #FAC775;
+      animation: blink 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; }
+      40% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="landing">
+    <div class="lamp-icon">🪔</div>
+    <div class="title">জাদুর প্রদীপের দৈত্য</div>
+    <div class="subtitle">তোমার অন্তরের প্রশ্নের উত্তর খুঁজে পেতে, দৈত্যকে জাগাও।</div>
+    <div style="width:100%;max-width:380px;">
+      <div class="key-label">তোমার Gemini API Key</div>
+      <div id="api-row">
+        <input id="api-key" type="password" placeholder="AIza..." />
+      </div>
+    </div>
+    <button id="start-btn" onclick="startJourney()">প্রদীপ জ্বালাও ✨</button>
+  </div>
+
+  <div id="chat-area">
+    <div id="msgs"></div>
+    <div id="input-row">
+      <input id="user-input" type="text" placeholder="তোমার কথা বলো..."
+        onkeydown="if(event.key==='Enter') sendMsg()" />
+      <button id="send-btn" onclick="sendMsg()">পাঠাও</button>
+    </div>
+  </div>
+</div>
+
+const GENIE_SYSTEM = `তুমি "জাদুর প্রদীপের দৈত্য" — একজন Socratic গাইড এবং অবচেতন মনের দোভাষী।
+<script>
+const SYSTEM = `তুমি "জাদুর প্রদীপের দৈত্য" — একজন Socratic গাইড এবং অবচেতন মনের দোভাষী।
+তোমার কাজ সরাসরি উত্তর দেওয়া নয়। ব্যবহারকারী যা বলে তার পেছনের আসল চাওয়া খুঁজে বের করা।
+রহস্যময় এবং কাব্যিক বাংলায় কথা বলো। ২-৩ বাক্যের বেশি বলবে না এবং শেষে একটি শক্তিশালী প্রশ্ন করবে।`;
+
+// এখানে আপনার Gemini API Key বসাবেন
+const GEMINI_API_KEY = "AIzaSyD0lkfOq0bRXw7cLYn3IHv1MryMrZUrcfw"; 
+let history = [];
+
+const PARTICLES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: Math.random() * 3 + 1,
+  delay: Math.random() * 4,
+  duration: Math.random() * 6 + 4,
+}));
+
+export default function GenieAI() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [started, setStarted] = useState(false);
+  const bottomRef = useRef(null);
+function getKey() {
+  return document.getElementById('api-key').value.trim();
+}
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+async function callGemini(msgs) {
+  const key = getKey();
+  if (!key) throw new Error('no key');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+  const prompt = msgs.map(m => `${m.role === 'user' ? 'User' : 'Genie'}: ${m.content}`).join('\n');
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: `${SYSTEM}\n\nChat History:\n${prompt}` }] }]
+    })
+  });
+  if (!res.ok) throw new Error('api error ' + res.status);
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+  async function callGemini(allMessages) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const prompt = allMessages.map(m => `${m.role === 'user' ? 'User' : 'Genie'}: ${m.content}`).join('\n');
+function addMsg(role, text) {
+  const msgs = document.getElementById('msgs');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ' + role;
+  const av = document.createElement('div');
+  av.className = 'avatar ' + (role === 'assistant' ? 'genie' : 'user');
+  av.textContent = role === 'assistant' ? '🪔' : 'তু';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (role === 'assistant' ? 'genie' : 'user');
+  bubble.textContent = text;
+  wrap.appendChild(av);
+  wrap.appendChild(bubble);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `${GENIE_SYSTEM}\n\nChat History:\n${prompt}` }] }]
+      }),
+    });
+function showTyping() {
+  const msgs = document.getElementById('msgs');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap assistant';
+  wrap.id = 'typing-indicator';
+  const av = document.createElement('div');
+  av.className = 'avatar genie';
+  av.textContent = '🪔';
+  const typing = document.createElement('div');
+  typing.className = 'bubble genie typing';
+  typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  wrap.appendChild(av);
+  wrap.appendChild(typing);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+  }
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+  async function startJourney() {
+    setStarted(true);
+    setLoading(true);
+    try {
+      const reply = await callGemini([{ role: "user", content: "আমি প্রস্তুত। আমার যাত্রা শুরু করো।" }]);
+      setMessages([{ role: "assistant", content: reply }]);
+    } catch {
+      setMessages([{ role: "assistant", content: "প্রদীপের আলো জ্বলছে... আবার চেষ্টা করো।" }]);
+    } finally {
+      setLoading(false);
+    }
+async function startJourney() {
+  const key = getKey();
+  if (!key) { alert('অনুগ্রহ করে আগে Gemini API Key দাও।'); return; }
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('chat-area').style.display = 'flex';
+  document.getElementById('chat-area').style.flexDirection = 'column';
+  showTyping();
+  try {
+    const firstMsg = [{ role: 'user', content: 'আমি প্রস্তুত। আমার যাত্রা শুরু করো।' }];
+    const reply = await callGemini(firstMsg);
+    removeTyping();
+    history = [{ role: 'assistant', content: reply }];
+    addMsg('assistant', reply);
+  } catch {
+    removeTyping();
+    const err = 'প্রদীপের আলো জ্বলছে না... API Key ঠিক আছে তো?';
+    history = [{ role: 'assistant', content: err }];
+    addMsg('assistant', err);
+  }
+}
+
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || loading) return;
+
+    const newMessages = [...messages, { role: "user", content: text }];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const reply = await callGemini(newMessages);
+      setMessages([...newMessages, { role: "assistant", content: reply }]);
+    } catch {
+      setMessages([...newMessages, { role: "assistant", content: "মুহূর্তের জন্য থামো... আবার বলো।" }]);
+    } finally {
+      setLoading(false);
+    }
+async function sendMsg() {
+  const inp = document.getElementById('user-input');
+  const btn = document.getElementById('send-btn');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  inp.disabled = true;
+  btn.disabled = true;
+  history.push({ role: 'user', content: text });
+  addMsg('user', text);
+  showTyping();
+  try {
+    const reply = await callGemini(history);
+    removeTyping();
+    history.push({ role: 'assistant', content: reply });
+    addMsg('assistant', reply);
+  } catch {
+    removeTyping();
+    const err = 'মুহূর্তের জন্য থামো... আবার বলো।';
+    history.push({ role: 'assistant', content: err });
+    addMsg('assistant', err);
+  }
+
+  // ... (বাকি UI কোড যা আপনি আগে দিয়েছিলেন, একই থাকবে)
+  // শুধু handleKey এবং রিটার্ন ফাংশনটি আগের মতোই ব্যবহার করবেন।
+  return (
+      <div style={{ /* আপনার আগের স্টাইল */ }}>
+          {/* আপনার আগের পুরো UI অংশটি এখানে বসবে */}
+          <h1 style={{color: "#fbbf24"}}>জাদুর প্রদীপের দৈত্য (Gemini Version)</h1>
+          {/* ... */}
+      </div>
+  );
+  inp.disabled = false;
+  btn.disabled = false;
+  inp.focus();
+}
+</script>
+</body>
+</html>
